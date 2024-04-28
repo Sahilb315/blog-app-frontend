@@ -1,16 +1,14 @@
 // ignore_for_file: depend_on_referenced_packages
 
-import 'package:blog_app/features/auth/controllers/auth_controller.dart';
-import 'package:blog_app/features/home/ui/home_page.dart';
+import 'package:blog_app/features/auth/controllers/auth_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/svg.dart';
-import '../../../constants/helper_functions.dart';
 import '../widgets/textfield.dart';
 import 'package:blog_app/constants/textStyle.dart';
 import 'package:blog_app/features/auth/ui/signup_page.dart';
-import 'package:blog_app/features/auth/toggle_pass_visibility.dart';
+import 'package:blog_app/features/auth/pass_visibility_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
@@ -34,63 +32,6 @@ class _LoginPageState extends State<LoginPage> {
 
   void initSharedPref() async {
     _prefs = await SharedPreferences.getInstance();
-  }
-
-  void loginUser(BuildContext context) async {
-    customCircularIndicator(context);
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill all the fields"),
-        ),
-      );
-      return;
-    }
-    final result = await AuthController.loginUser(
-      emailController.text.trim(),
-      passwordController.text,
-    );
-    if (!context.mounted) return;
-
-    if (result != null) {
-      if (result == "User not found") {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("No user found \nPlease create a account"),
-          ),
-        );
-      } else if (result == "Invalid password") {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Invalid Password"),
-          ),
-        );
-      } else {
-        final userToken = result;
-        _prefs.setString("token", userToken);
-        Navigator.pop(context);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(userToken: userToken),
-          ),
-        );
-      }
-    } else {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Some error occured \nPlease try again later"),
-        ),
-      );
-    }
   }
 
   @override
@@ -239,7 +180,12 @@ class _LoginPageState extends State<LoginPage> {
                                 height: 18,
                               ),
                               InkWell(
-                                onTap: () => loginUser(context),
+                                onTap: () => AuthService.loginUser(
+                                  context,
+                                  emailController,
+                                  passwordController,
+                                  _prefs,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(14),
                                   alignment: Alignment.center,

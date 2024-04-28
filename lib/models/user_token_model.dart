@@ -4,53 +4,42 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'package:blog_app/models/blog_model.dart';
+import 'package:blog_app/models/user_model.dart';
 
-class UserModel {
+class UserTokenModel {
+  final String id;
   final String profilePic;
-  final String? id;
   final String username;
   final String email;
-  final String password;
-  final String? createdAt;
-  final String? updatedAt;
   final List<UserModel> followers;
   final List<UserModel> following;
   final List<BlogModel> bookmarks;
 
-  UserModel({
+  UserTokenModel({
+    required this.id,
     required this.profilePic,
-    this.id,
     required this.username,
     required this.email,
-    required this.password,
-    this.createdAt,
-    this.updatedAt,
     required this.followers,
     required this.following,
     required this.bookmarks,
   });
+  
 
-
-  UserModel copyWith({
-    String? profilePic,
+  UserTokenModel copyWith({
     String? id,
+    String? profilePic,
     String? username,
     String? email,
-    String? password,
-    String? createdAt,
-    String? updatedAt,
     List<UserModel>? followers,
     List<UserModel>? following,
     List<BlogModel>? bookmarks,
   }) {
-    return UserModel(
-      profilePic: profilePic ?? this.profilePic,
+    return UserTokenModel(
       id: id ?? this.id,
+      profilePic: profilePic ?? this.profilePic,
       username: username ?? this.username,
       email: email ?? this.email,
-      password: password ?? this.password,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
       followers: followers ?? this.followers,
       following: following ?? this.following,
       bookmarks: bookmarks ?? this.bookmarks,
@@ -59,28 +48,22 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'profilePic': profilePic,
       '_id': id,
+      'profilePic': profilePic,
       'username': username,
       'email': email,
-      'password': password,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
       'followers': followers.map((x) => x.toMap()).toList(),
       'following': following.map((x) => x.toMap()).toList(),
       'bookmarks': bookmarks.map((x) => x.toMap()).toList(),
     };
   }
 
-  factory UserModel.fromMap(Map<String, dynamic> map) {
-    return UserModel(
+  factory UserTokenModel.fromMap(Map<String, dynamic> map) {
+    return UserTokenModel(
+      id: map['_id'] as String,
       profilePic: map['profilePic'] as String,
-      id: map['_id'] != null ? map['_id'] as String : null,
       username: map['username'] as String,
       email: map['email'] as String,
-      password: map['password'] as String,
-      createdAt: map['createdAt'] != null ? map['createdAt'] as String : null,
-      updatedAt: map['updatedAt'] != null ? map['updatedAt'] as String : null,
       followers: List<UserModel>.from((map['followers'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>),),),
       following: List<UserModel>.from((map['following'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>),),),
       bookmarks: List<BlogModel>.from((map['bookmarks'] as List).map<BlogModel>((x) => BlogModel.fromMap(x as Map<String,dynamic>),),),
@@ -89,25 +72,22 @@ class UserModel {
 
   String toJson() => json.encode(toMap());
 
-  factory UserModel.fromJson(String source) => UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory UserTokenModel.fromJson(String source) => UserTokenModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'UserModel(profilePic: $profilePic, _id: $id, username: $username, email: $email, password: $password, createdAt: $createdAt, updatedAt: $updatedAt, followers: $followers, following: $following, bookmarks: $bookmarks)';
+    return 'UserTokenModel(id: $id, profilePic: $profilePic, username: $username, email: $email, followers: $followers, following: $following, bookmarks: $bookmarks)';
   }
 
   @override
-  bool operator ==(covariant UserModel other) {
+  bool operator ==(covariant UserTokenModel other) {
     if (identical(this, other)) return true;
   
     return 
-      other.profilePic == profilePic &&
       other.id == id &&
+      other.profilePic == profilePic &&
       other.username == username &&
       other.email == email &&
-      other.password == password &&
-      other.createdAt == createdAt &&
-      other.updatedAt == updatedAt &&
       listEquals(other.followers, followers) &&
       listEquals(other.following, following) &&
       listEquals(other.bookmarks, bookmarks);
@@ -115,13 +95,10 @@ class UserModel {
 
   @override
   int get hashCode {
-    return profilePic.hashCode ^
-      id.hashCode ^
+    return id.hashCode ^
+      profilePic.hashCode ^
       username.hashCode ^
       email.hashCode ^
-      password.hashCode ^
-      createdAt.hashCode ^
-      updatedAt.hashCode ^
       followers.hashCode ^
       following.hashCode ^
       bookmarks.hashCode;

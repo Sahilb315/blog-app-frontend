@@ -1,15 +1,16 @@
-import 'package:blog_app/constants/helper_functions.dart';
+import 'dart:io';
 import 'package:blog_app/constants/textStyle.dart';
-import 'package:blog_app/features/auth/controllers/auth_controller.dart';
+import 'package:blog_app/features/auth/controllers/auth_service.dart';
+import 'package:blog_app/features/auth/image_provider.dart';
 import 'package:blog_app/features/auth/ui/login_page.dart';
 import 'package:blog_app/features/auth/widgets/textfield.dart';
-import 'package:blog_app/models/user_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../toggle_pass_visibility.dart';
+import '../pass_visibility_provider.dart';
 
 class SignUpPage extends StatelessWidget {
   SignUpPage({super.key});
@@ -18,44 +19,17 @@ class SignUpPage extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void signUpUser(BuildContext context) async {
-    customCircularIndicator(context);
-    if (usernameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill all the fields"),
-        ),
-      );
-      return;
-    }
-    final result = await AuthController.signUpUser(
-      UserModel(
-        username: usernameController.text,
-        email: emailController.text.trim(),
-        password: passwordController.text,
-      ),
-    );
-    if (!context.mounted) return;
+  final ImagePicker _imagePicker = ImagePicker();
 
-    if (result == null) {
-      Navigator.pop(context);
-      navigateToScreenReplaceRightLeftAnimation(
-        context,
-        const LoginPage(),
-      );
+  Future<void> getImage(BuildContext context) async {
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (!context.mounted) return;
+    if (pickedFile != null) {
+      context.read<PickImageProvider>().setImageFile(File(pickedFile.path));
+      context.read<PickImageProvider>().setDoesImageExist(true);
     } else {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result),
-          backgroundColor: Colors.red,
-        ),
-      );
+      context.read<PickImageProvider>().setDoesImageExist(false);
     }
   }
 
@@ -117,8 +91,62 @@ class SignUpPage extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Consumer<PickImageProvider>(
+                                builder: (context, value, child) => InkWell(
+                                  onTap: () => getImage(context),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.brown.shade300,
+                                        width: 1.1,
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 50,
+                                      backgroundColor: Colors.white,
+                                      child: value.doesImageExist
+                                          ? Container(
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  fit: BoxFit.cover,
+                                                  image: FileImage(
+                                                      value.imageFile!),
+                                                ),
+                                                border: Border.all(
+                                                  color: Colors.brown.shade300,
+                                                  width: 1.1,
+                                                ),
+                                              ),
+                                            )
+                                          : Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.camera_alt_rounded,
+                                                  color: Colors.brown,
+                                                ),
+                                                Text(
+                                                  "Profile Pic",
+                                                  style:
+                                                      headingStyleSF.copyWith(
+                                                    fontSize: 15,
+                                                    color:
+                                                        Colors.brown.shade700,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                               const SizedBox(
-                                height: 8,
+                                height: 16,
                               ),
                               Text(
                                 "Username",
@@ -216,7 +244,12 @@ class SignUpPage extends StatelessWidget {
                                 height: 18,
                               ),
                               InkWell(
-                                onTap: () => signUpUser(context),
+                                onTap: () => AuthService.signUpUser(
+                                  context,
+                                  usernameController,
+                                  emailController,
+                                  passwordController,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(14),
                                   alignment: Alignment.center,
@@ -240,12 +273,14 @@ class SignUpPage extends StatelessWidget {
                                 children: [
                                   const Text("Have an account?"),
                                   InkWell(
-                                    onTap: () => Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const LoginPage(),
-                                      ),
-                                    ),
+                                    onTap: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginPage(),
+                                        ),
+                                      );
+                                    },
                                     child: const Text(
                                       " Log in",
                                       style: TextStyle(color: Colors.brown),

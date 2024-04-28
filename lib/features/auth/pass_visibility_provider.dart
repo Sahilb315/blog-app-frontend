@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-class TogglePasswordVisibility extends ChangeNotifier {
-  bool _hasFocus = false;
-  bool get hasFocus => _hasFocus;
-  
+class TogglePasswordVisibility extends ChangeNotifier {  
   bool _isLoginPasswordVisible = false;
   bool get showPasswordLogin => _isLoginPasswordVisible;
 
