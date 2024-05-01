@@ -1,8 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-
 import 'package:blog_app/models/blog_model.dart';
 
 class UserModel {
@@ -15,7 +13,7 @@ class UserModel {
   final String? updatedAt;
   final List<UserModel> followers;
   final List<UserModel> following;
-  final List<BlogModel> bookmarks;
+  final List<dynamic> bookmarks;
 
   UserModel({
     required this.profilePic,
@@ -81,9 +79,9 @@ class UserModel {
       password: map['password'] as String,
       createdAt: map['createdAt'] != null ? map['createdAt'] as String : null,
       updatedAt: map['updatedAt'] != null ? map['updatedAt'] as String : null,
-      followers: List<UserModel>.from((map['followers'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>),),),
-      following: List<UserModel>.from((map['following'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>),),),
-      bookmarks: List<BlogModel>.from((map['bookmarks'] as List).map<BlogModel>((x) => BlogModel.fromMap(x as Map<String,dynamic>),),),
+      followers: List<UserModel>.from((map['followers'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>))),
+      following: List<UserModel>.from((map['following'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>))),
+      bookmarks: List.from(map['bookmarks']).isNotEmpty && List.from(map['bookmarks']).first is! String ? List.from((map['bookmarks'] as List).map((x) => BlogModel.fromMap(x as Map<String,dynamic>))) : List.from(map['bookmarks']) 
     );
   }
 

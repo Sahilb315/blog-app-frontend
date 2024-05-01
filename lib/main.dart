@@ -2,9 +2,10 @@
 
 import 'package:blog_app/features/auth/image_provider.dart';
 import 'package:blog_app/features/auth/ui/login_page.dart';
-import 'package:blog_app/features/home/link_provider.dart';
-import 'package:blog_app/features/home/home_provider.dart';
-import 'package:blog_app/features/home/ui/home_page.dart';
+import 'package:blog_app/features/bookmarks/bookmark_provider.dart';
+import 'package:blog_app/features/home/provider/link_provider.dart';
+import 'package:blog_app/features/home/provider/home_provider.dart';
+import 'package:blog_app/features/home/ui/pages/home_page.dart';
 import 'package:blog_app/features/profile/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,6 +27,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => PickImageProvider()),
         ChangeNotifierProvider(create: (context) => LinkProvider()),
         ChangeNotifierProvider(create: (context) => ProfileProvider()),
+        ChangeNotifierProvider(create: (context) => BookmarkProvider()),
       ],
       child: MyApp(token: token),
     ),

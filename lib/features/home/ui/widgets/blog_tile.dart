@@ -1,17 +1,21 @@
 import 'package:blog_app/constants/helper_functions.dart';
-import 'package:blog_app/features/home/ui/blog_page.dart';
+import 'package:blog_app/features/home/ui/pages/blog_page.dart';
 import 'package:blog_app/models/blog_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 class BlogTile extends StatelessWidget {
+  final void Function() onBookmarkTap;
+  final BlogModel blog;
+  final Duration gap;
+  final bool isBookmarked;
   const BlogTile({
     super.key,
     required this.blog,
+    required this.isBookmarked,
     required this.gap,
+    required this.onBookmarkTap,
   });
-
-  final BlogModel blog;
-  final Duration gap;
 
   @override
   Widget build(BuildContext context) {
@@ -108,9 +112,17 @@ class BlogTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(CupertinoIcons.bookmark),
+                      InkWell(
+                        onTap: onBookmarkTap,
+                        child: isBookmarked
+                            ? Icon(
+                                CupertinoIcons.bookmark_fill,
+                                color: Colors.grey.shade800,
+                              )
+                            : const Icon(CupertinoIcons.bookmark),
+                      ),
                     ],
                   ),
                 ],

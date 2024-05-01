@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/helper_functions.dart';
 import '../../../models/user_model.dart';
-import '../../home/ui/home_page.dart';
+import '../../home/ui/pages/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {

@@ -1,25 +1,27 @@
 import 'package:blog_app/constants/colors.dart';
 import 'package:blog_app/constants/helper_functions.dart';
+import 'package:blog_app/features/bookmarks/bookmark_provider.dart';
 import 'package:blog_app/features/home/ui/pages/blog_page.dart';
-import 'package:blog_app/features/profile/profile_provider.dart';
 import 'package:blog_app/models/user_token_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ProfilePage extends StatefulWidget {
+import '../../../constants/error_handler.dart';
+
+class BookmarksPage extends StatefulWidget {
   final UserTokenModel userTokenModel;
-  const ProfilePage({super.key, required this.userTokenModel});
+  const BookmarksPage({super.key, required this.userTokenModel});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<BookmarksPage> createState() => _BoomMarksPageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _BoomMarksPageState extends State<BookmarksPage> {
   @override
   void initState() {
-    Provider.of<ProfileProvider>(context, listen: false)
-        .fetchUsersBlogs(widget.userTokenModel.id);
+    Provider.of<BookmarkProvider>(context, listen: false)
+        .getUsersBookmarks(widget.userTokenModel.id);
     super.initState();
   }
 
@@ -29,108 +31,49 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: appBgColor,
       appBar: AppBar(
         backgroundColor: appBgColor,
-        surfaceTintColor: appBgColor,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: GestureDetector(
-              onTap: () {},
-              child: const Icon(
-                CupertinoIcons.pencil_ellipsis_rectangle,
-              ),
-            ),
-          ),
-        ],
+        title: const Text('Your Bookmarks'),
+        centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    foregroundImage: NetworkImage(
-                      widget.userTokenModel.profilePic,
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 12,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.userTokenModel.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+      body: Consumer<BookmarkProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.brown,
+                strokeCap: StrokeCap.round,
+                strokeWidth: 3.5,
+              ),
+            );
+          } else if (provider.errorMessage != null) {
+            return ErrorHandler(
+              errorMessage: provider.errorMessage!,
+            );
+          } else {
+            return provider.usersBookmarks.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          CupertinoIcons.news,
+                          size: 48,
                         ),
-                      ),
-                      const SizedBox(
-                        height: 4,
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                              "${widget.userTokenModel.followers.length} followers"),
-                          const Text(" • "),
-                          Text(
-                              "${widget.userTokenModel.following.length} following"),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 32,
-              ),
-              Text(
-                "Your Stories",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Consumer<ProfileProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        strokeCap: StrokeCap.round,
-                        strokeWidth: 3.5,
-                        color: Colors.brown,
-                      ),
-                    );
-                  } else {
-                    return provider.usersBlogs.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  CupertinoIcons.news,
-                                  size: 48,
-                                ),
-                                Text(
-                                  "No blogs posted",
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: provider.usersBlogs.length,
+                        Text(
+                          "No blogs bookmarked",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: provider.usersBookmarks.length,
                             itemBuilder: (context, index) {
-                              final blog = provider.usersBlogs[index];
+                              final blog = provider.usersBookmarks[index];
                               DateTime formattedDate =
                                   formatISODate(blog.createdAt!);
                               final gap =
@@ -236,21 +179,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 ),
                                               ],
                                             ),
-                                            PopupMenuButton(
-                                              color: appBgColor,
-                                              child: const Icon(
-                                                  Icons.more_vert_rounded),
-                                              itemBuilder: (context) {
-                                                return [
-                                                  PopupMenuItem(
-                                                    height: 30,
-                                                    child: const Text("Delete"),
-                                                    onTap: () =>
-                                                        provider.deleteBlogById(
-                                                            blog.id!),
-                                                  ),
-                                                ];
+                                            InkWell(
+                                              onTap: () {
+                                                provider.bookmarkBlog(
+                                                  userId:
+                                                      widget.userTokenModel.id,
+                                                  blogModel: blog,
+                                                  userTokenModel:
+                                                      widget.userTokenModel,
+                                                );
                                               },
+                                              child: const Icon(
+                                                CupertinoIcons.clear,
+                                                color: Colors.black,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -260,13 +202,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               );
                             },
-                          );
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+          }
+        },
       ),
     );
   }

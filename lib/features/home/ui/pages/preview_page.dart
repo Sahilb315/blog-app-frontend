@@ -1,17 +1,14 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:blog_app/features/auth/image_provider.dart';
-import 'package:blog_app/features/home/home_provider.dart';
+import 'package:blog_app/features/home/provider/home_provider.dart';
 import 'package:fluentui_icons/fluentui_icons.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'package:blog_app/constants/colors.dart';
-import 'package:blog_app/features/home/ui/add_blog_page.dart';
 import 'package:blog_app/models/blog_model.dart';
 
 class BlogPreviewPage extends StatefulWidget {
@@ -35,25 +32,31 @@ class BlogPreviewPage extends StatefulWidget {
 }
 
 class _BlogPreviewPageState extends State<BlogPreviewPage> {
-  List<String> matched = [];
-
-  void getAllLinks(
-    String name,
-  ) {
-    name.split("[").forEach((element) {
-      if (element.contains("]")) {
-        final pat = element.split(']')[0];
-        matched.add(pat);
-      }
-    });
-  }
-
   late List<String> words;
+
+  List<String> extractWords(String content) {
+    final List<String> words = [];
+    final RegExp linkPattern = RegExp(r'\[([^\]]+)\]');
+    final matches = linkPattern.allMatches(content);
+    log(matches.first.groupNames.toString());
+    int start = 0;
+    for (final match in matches) {
+      final linkText = match.group(1);
+      if (linkText != null) {
+        words.addAll(content.substring(start, match.start).trim().split(' '));
+        words.add('[$linkText]');
+        start = match.end;
+      }
+    }
+    if (start < content.length) {
+      words.addAll(content.substring(start).trim().split(' '));
+    }
+    return words;
+  }
 
   @override
   void initState() {
-    getAllLinks(widget.blogModel.content);
-    words = widget.blogModel.content.split(" ");
+    words = extractWords(widget.blogModel.content);
     super.initState();
   }
 
@@ -151,44 +154,31 @@ class _BlogPreviewPageState extends State<BlogPreviewPage> {
                         fontSize: 18,
                       ),
                       children: [
-                        ...words.map(
-                          (word) {
-                            if (word.startsWith('[') && word.endsWith(']')) {
-                              log(word);
-                              word.split("[").forEach((element) {
-                                if (element.contains("]")) {
-                                  word = element.split(']')[0];
-                                }
-                              });
-                            }
-                            if (matched.contains(word)) {
-                              return TextSpan(
-                                text: "$word ",
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    try {
-                                      await launchUrl(
-                                          Uri.parse("https://$word"));
-                                    } catch (e) {
-                                      if (!context.mounted) return;
-                                      displayToastMessage(
-                                          context, e.toString());
-                                    }
-                                  },
-                                style: const TextStyle(
-                                  color: Colors.blue,
+                        for (final word in words)
+                          word.startsWith('[') && word.endsWith(']')
+                              ? TextSpan(
+                                  text: word.substring(
+                                    1,
+                                    word.length - 1,
+                                  ), // Remove brackets
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () async {
+                                      final link =
+                                          word.substring(1, word.length - 1);
+                                      try {
+                                        await launchUrl(
+                                            Uri.parse("https://$link"));
+                                      } catch (e) {
+                                        log("Error: $e");
+                                        // Handle error
+                                      }
+                                    },
+                                  style: const TextStyle(color: Colors.blue),
+                                )
+                              : TextSpan(
+                                  text: '$word ',
+                                  style: const TextStyle(color: Colors.black),
                                 ),
-                              );
-                            } else {
-                              return TextSpan(
-                                text: "$word ",
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                ),
-                              );
-                            }
-                          },
-                        ),
                       ],
                     ),
                   ),

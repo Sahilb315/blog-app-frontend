@@ -11,9 +11,10 @@ class BlogModel {
   final String title;
   final String content;
   final List<String>? links;
-  final UserModel? createdBy;
+  final dynamic createdBy;
   final String? createdAt;
   final String? updatedAt;
+  
   BlogModel({
     this.id,
     required this.thumbnail,
@@ -68,7 +69,7 @@ class BlogModel {
       title: map['title'] as String,
       content: map['content'] as String,
       links: map['links'] != null ? List.from((map['links'] as List)) : null,
-      createdBy: map['createdBy'] != null ? UserModel.fromMap(map['createdBy'] as Map<String,dynamic>) : null,
+      createdBy: map['createdBy'].runtimeType != String ? UserModel.fromMap(map['createdBy'] as Map<String,dynamic>) : map['createdBy'].toString(),
       createdAt: map['createdAt'] != null ? map['createdAt'] as String : null,
       updatedAt: map['updatedAt'] != null ? map['updatedAt'] as String : null,
     );

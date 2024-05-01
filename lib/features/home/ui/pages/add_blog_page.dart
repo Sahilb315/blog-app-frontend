@@ -2,7 +2,7 @@
 import 'dart:io';
 import 'package:blog_app/constants/colors.dart';
 import 'package:blog_app/features/auth/image_provider.dart';
-import 'package:blog_app/features/home/ui/preview_page.dart';
+import 'package:blog_app/features/home/ui/pages/preview_page.dart';
 import 'package:blog_app/models/blog_model.dart';
 import 'package:blog_app/models/user_token_model.dart';
 import 'package:flutter/cupertino.dart';

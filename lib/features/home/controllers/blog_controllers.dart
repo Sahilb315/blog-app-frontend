@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:blog_app/models/blog_model.dart';
+import 'package:blog_app/models/user_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:blog_app/models/blog_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BlogController {
@@ -130,6 +131,89 @@ class BlogController {
       );
     }
   }
+
+  static Future<BlogsData> bookmarkBlog(String blogId, String userId) async {
+    try {
+      final body = jsonEncode({
+        "userId": userId,
+        "blogId": blogId,
+      });
+      final res = await http.patch(
+          Uri.parse("${dotenv.env['BASE_URL']}/blog/$blogId"),
+          body: body,
+          headers: {
+            "Content-Type": "application/json",
+          });
+      final jsonData = jsonDecode(res.body);
+      if (jsonData['status'] as bool) {
+        List jsonBlogs = jsonData['bookmarks'];
+        List<BlogModel> blogs =
+            jsonBlogs.map((e) => BlogModel.fromMap(e)).toList();
+        return BlogsData(areBlogsFetched: true, blogs: blogs);
+      } else {
+        return BlogsData(
+            areBlogsFetched: false,
+            errorMessage: jsonData['message'].toString());
+      }
+    } catch (e) {
+      log("Error while bookmarking blog: ${e.toString()}");
+      return BlogsData(areBlogsFetched: false, errorMessage: e.toString());
+    }
+  }
+
+  static Future<BlogsData> getUserBookmarks(String userId) async {
+    try {
+      final res = await http.get(
+        Uri.parse("${dotenv.env['BASE_URL']}/user/bookmarks/$userId"),
+      );
+      final jsonData = jsonDecode(res.body);
+      if (jsonData['status'] as bool) {
+        List jsonBlogs = jsonData['bookmarks'];
+        List<BlogModel> blogs =
+            jsonBlogs.map((e) => BlogModel.fromMap(e)).toList();
+        return BlogsData(areBlogsFetched: true, blogs: blogs);
+      } else {
+        return BlogsData(
+            areBlogsFetched: false,
+            errorMessage: jsonData['message'].toString());
+      }
+    } catch (e) {
+      log("Error while fetching user bookmarks: ${e.toString()}");
+      return BlogsData(areBlogsFetched: false, errorMessage: e.toString());
+    }
+  }
+
+  static Future<UserData> getUserModel(String userId) async {
+    try {
+      final res =
+          await http.get(Uri.parse("${dotenv.env['BASE_URL']}/user/$userId"));
+      final jsonData = jsonDecode(res.body);
+      if (jsonData['status'] as bool) {
+        return UserData(
+          userModel: UserModel.fromMap(jsonData['user']),
+          isUserFetched: true,
+        );
+      } else {
+        return UserData(
+          errorMessage: jsonData['message'],
+          isUserFetched: false,
+        );
+      }
+    } catch (e) {
+      return UserData(
+        errorMessage: e.toString(),
+        isUserFetched: false,
+      );
+    }
+  }
+}
+
+class UserData {
+  final UserModel? userModel;
+  final String? errorMessage;
+  final bool isUserFetched;
+
+  UserData({this.userModel, this.errorMessage, required this.isUserFetched});
 }
 
 class SingleBlogData {

@@ -1,6 +1,6 @@
 import 'package:blog_app/constants/colors.dart';
 import 'package:blog_app/constants/helper_functions.dart';
-import 'package:blog_app/features/home/ui/add_blog_page.dart';
+import 'package:blog_app/features/home/ui/pages/add_blog_page.dart';
 import 'package:blog_app/models/blog_model.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +40,7 @@ class _BlogPageState extends State<BlogPage> {
   @override
   Widget build(BuildContext context) {
     DateTime formattedDate = formatISODate(widget.blogModel.createdAt!);
-    final gap = DateTime.now().difference(formattedDate);
+    // final gap = DateTime.now().difference(formattedDate);
     List splitDate = formattedDate.toString().split(' ');
     final date = splitDate[0];
 
@@ -170,38 +170,5 @@ class _BlogPageState extends State<BlogPage> {
         ),
       ),
     );
-  }
-
-  String calculateDate(String date) {
-    final splitDate = date.split('-');
-    final month = splitDate[1];
-    switch (month) {
-      case "01":
-        return "${splitDate[2]} Jan ${splitDate[0]}";
-      case "02":
-        return "${splitDate[2]} Feb ${splitDate[0]}";
-      case "03":
-        return "${splitDate[2]} Mar ${splitDate[0]}";
-      case "04":
-        return "${splitDate[2]} Apr ${splitDate[0]}";
-      case "05":
-        return "${splitDate[2]} May ${splitDate[0]}";
-      case "06":
-        return "${splitDate[2]} June ${splitDate[0]}";
-      case "07":
-        return "${splitDate[2]} July ${splitDate[0]}";
-      case "08":
-        return "${splitDate[2]} Aug ${splitDate[0]}";
-      case "09":
-        return "${splitDate[2]} Sep ${splitDate[0]}";
-      case "10":
-        return "${splitDate[2]} Oct ${splitDate[0]}";
-      case "11":
-        return "${splitDate[2]} Nov ${splitDate[0]}";
-      case "12":
-        return "${splitDate[2]} Dec ${splitDate[0]}";
-      default:
-        return date;
-    }
   }
 }

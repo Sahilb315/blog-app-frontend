@@ -22,7 +22,7 @@ void navigateToScreenReplaceRightLeftAnimation(
   );
 }
 
-void navigateToScreenDownToUpAni(BuildContext context, Widget screen){
+void navigateToScreenDownToUpAni(BuildContext context, Widget screen) {
   Navigator.push(
     context,
     PageRouteBuilder(
@@ -66,12 +66,45 @@ String calculateTimeGap(Duration time) {
   if (time.inSeconds > 60) {
     if (time.inMinutes > 60) {
       if (time.inHours > 24) {
-        return "${time.inDays}d ${time.inHours - 24}h";
+        return "${time.inDays}d";
       }
       return "${time.inHours}h";
     }
     return "${time.inMinutes}m";
   } else {
     return "Just now";
+  }
+}
+
+String calculateDate(String date) {
+  final splitDate = date.split('-');
+  final month = splitDate[1];
+  switch (month) {
+    case "01":
+      return "${splitDate[2]} Jan ${splitDate[0]}";
+    case "02":
+      return "${splitDate[2]} Feb ${splitDate[0]}";
+    case "03":
+      return "${splitDate[2]} Mar ${splitDate[0]}";
+    case "04":
+      return "${splitDate[2]} Apr ${splitDate[0]}";
+    case "05":
+      return "${splitDate[2]} May ${splitDate[0]}";
+    case "06":
+      return "${splitDate[2]} June ${splitDate[0]}";
+    case "07":
+      return "${splitDate[2]} July ${splitDate[0]}";
+    case "08":
+      return "${splitDate[2]} Aug ${splitDate[0]}";
+    case "09":
+      return "${splitDate[2]} Sep ${splitDate[0]}";
+    case "10":
+      return "${splitDate[2]} Oct ${splitDate[0]}";
+    case "11":
+      return "${splitDate[2]} Nov ${splitDate[0]}";
+    case "12":
+      return "${splitDate[2]} Dec ${splitDate[0]}";
+    default:
+      return date;
   }
 }
