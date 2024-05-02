@@ -6,7 +6,8 @@ import 'package:blog_app/features/bookmarks/bookmark_provider.dart';
 import 'package:blog_app/features/home/provider/link_provider.dart';
 import 'package:blog_app/features/home/provider/home_provider.dart';
 import 'package:blog_app/features/home/ui/pages/home_page.dart';
-import 'package:blog_app/features/profile/profile_provider.dart';
+import 'package:blog_app/features/profile/providers/profile_info_provider.dart';
+import 'package:blog_app/features/profile/providers/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'features/auth/pass_visibility_provider.dart';
@@ -28,6 +29,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => LinkProvider()),
         ChangeNotifierProvider(create: (context) => ProfileProvider()),
         ChangeNotifierProvider(create: (context) => BookmarkProvider()),
+        ChangeNotifierProvider(create: (context) => InfoProfileProvider()),
       ],
       child: MyApp(token: token),
     ),

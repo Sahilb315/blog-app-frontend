@@ -43,200 +43,219 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: appBgColor,
-      appBar: AppBar(
+    return PopScope(
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          titleController.clear();
+          contentController.clear();
+          linkController.clear();
+          context.read<PickImageProvider>().setDoesImageExist(false);
+          context.read<PickImageProvider>().setImageFile(null);
+        }
+      },
+      child: Scaffold(
         backgroundColor: appBgColor,
-        surfaceTintColor: appBgColor,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            FluentSystemIcons.ic_fluent_dismiss_regular,
-            color: Colors.grey.shade700,
+        appBar: AppBar(
+          backgroundColor: appBgColor,
+          surfaceTintColor: appBgColor,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<PickImageProvider>().setDoesImageExist(false);
+              context.read<PickImageProvider>().setImageFile(null);
+            },
+            icon: Icon(
+              FluentSystemIcons.ic_fluent_dismiss_regular,
+              color: Colors.grey.shade700,
+            ),
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: InkWell(
-              onTap: () {
-                if (titleController.text.isEmpty) {
-                  displayToastMessage(context, "Please add a title");
-                } else if (!context.read<PickImageProvider>().doesImageExist) {
-                  displayToastMessage(context, "Please add a thumbnail");
-                } else if (contentController.text.isEmpty) {
-                  displayToastMessage(context, "Please add content");
-                } else {
-                  final path = context
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: InkWell(
+                onTap: () {
+                  if (titleController.text.isEmpty) {
+                    displayToastMessage(context, "Please add a title");
+                  } else if (!context
                       .read<PickImageProvider>()
-                      .imageFile!
-                      .path
-                      .toString();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BlogPreviewPage(
-                        linkController: linkController,
-                        titleController: titleController,
-                        contentController: contentController,
-                        userId: widget.userTokenModel.id,
-                        blogModel: BlogModel(
-                          thumbnail: path,
-                          title: titleController.text.trim(),
-                          content: contentController.text.trim(),
-                          links: [],
+                      .doesImageExist) {
+                    displayToastMessage(context, "Please add a thumbnail");
+                  } else if (contentController.text.isEmpty) {
+                    displayToastMessage(context, "Please add content");
+                  } else {
+                    final path = context
+                        .read<PickImageProvider>()
+                        .imageFile!
+                        .path
+                        .toString();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlogPreviewPage(
+                          linkController: linkController,
+                          titleController: titleController,
+                          contentController: contentController,
+                          userId: widget.userTokenModel.id,
+                          blogModel: BlogModel(
+                            thumbnail: path,
+                            title: titleController.text.trim(),
+                            content: contentController.text.trim(),
+                            links: [],
+                          ),
                         ),
                       ),
+                    );
+                  }
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade500.withOpacity(0.9),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(12),
                     ),
-                  );
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade500.withOpacity(0.9),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(12),
+                  ),
+                  child: const Text(
+                    "Preview",
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                child: const Text(
-                  "Preview",
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomSheet: Container(
-        padding: const EdgeInsets.only(left: 12, bottom: 8, top: 2),
-        height: 45,
-        width: MediaQuery.sizeOf(context).width,
-        decoration: BoxDecoration(
-          color: appBgColor,
-          border: Border(
-            top: BorderSide(color: Colors.grey.shade400),
-          ),
-        ),
-        child: Row(
-          children: [
-            InkWell(
-              onTap: () {
-                linkAdderDialog(
-                  context,
-                  () {
-                    if (linkController.text.isEmpty) {
-                      return;
-                    }
-                    contentController.text += "[${linkController.text}]";
-                    linkController.clear();
-                    Navigator.pop(context);
-                  },
-                );
-              },
-              child: Icon(
-                CupertinoIcons.link,
-                color: Colors.grey.shade700,
               ),
             ),
           ],
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  Consumer<PickImageProvider>(
-                    builder: (context, value, child) {
-                      return InkWell(
-                        onTap: () => getImage(context),
-                        borderRadius: BorderRadius.circular(10),
-                        child: value.doesImageExist
-                            ? Container(
-                                height: 150,
-                                width: MediaQuery.sizeOf(context).width * 0.9,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image: FileImage(value.imageFile!),
-                                  ),
-                                  border:
-                                      Border.all(color: Colors.grey.shade500),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              )
-                            : Container(
-                                height: 150,
-                                width: MediaQuery.sizeOf(context).width * 0.9,
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey.shade500),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text("Upload Thumbnail"),
-                                      SizedBox(
-                                        height: 6,
-                                      ),
-                                      Icon(
-                                        CupertinoIcons.photo,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                      );
+        bottomSheet: Container(
+          padding: const EdgeInsets.only(left: 12, bottom: 8, top: 2),
+          height: 45,
+          width: MediaQuery.sizeOf(context).width,
+          decoration: BoxDecoration(
+            color: appBgColor,
+            border: Border(
+              top: BorderSide(color: Colors.grey.shade400),
+            ),
+          ),
+          child: Row(
+            children: [
+              InkWell(
+                onTap: () {
+                  linkAdderDialog(
+                    context,
+                    () {
+                      if (linkController.text.isEmpty) {
+                        return;
+                      }
+                      contentController.text += "[${linkController.text}]";
+                      linkController.clear();
+                      Navigator.pop(context);
                     },
-                  ),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  TextField(
-                    smartDashesType: SmartDashesType.enabled,
-                    smartQuotesType: SmartQuotesType.enabled,
-                    autofocus: true,
-                    controller: titleController,
-                    maxLines: null,
-                    decoration: const InputDecoration(
-                      hintText: 'Title',
-                      hintStyle: TextStyle(fontSize: 22),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.all(2),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  TextField(
-                    controller: contentController,
-                    maxLines: null,
-                    decoration: const InputDecoration(
-                      hintText: 'Content',
-                      hintStyle: TextStyle(fontSize: 18),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.all(2),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 60,
-                  ),
-                ],
+                  );
+                },
+                child: Icon(
+                  CupertinoIcons.link,
+                  color: Colors.grey.shade700,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  children: [
+                    Consumer<PickImageProvider>(
+                      builder: (context, value, child) {
+                        return InkWell(
+                          onTap: () => getImage(context),
+                          borderRadius: BorderRadius.circular(10),
+                          child: value.doesImageExist
+                              ? Container(
+                                  height: 150,
+                                  width: MediaQuery.sizeOf(context).width * 0.9,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image: FileImage(value.imageFile!),
+                                    ),
+                                    border:
+                                        Border.all(color: Colors.grey.shade500),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                )
+                              : Container(
+                                  height: 150,
+                                  width: MediaQuery.sizeOf(context).width * 0.9,
+                                  decoration: BoxDecoration(
+                                    border:
+                                        Border.all(color: Colors.grey.shade500),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text("Upload Thumbnail"),
+                                        SizedBox(
+                                          height: 6,
+                                        ),
+                                        Icon(
+                                          CupertinoIcons.photo,
+                                          color: Colors.grey,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                        );
+                      },
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    TextField(
+                      smartDashesType: SmartDashesType.enabled,
+                      smartQuotesType: SmartQuotesType.enabled,
+                      autofocus: true,
+                      controller: titleController,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Title',
+                        hintStyle: TextStyle(fontSize: 22),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.all(2),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    TextField(
+                      controller: contentController,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Content',
+                        hintStyle: TextStyle(fontSize: 18),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.all(2),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 60,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

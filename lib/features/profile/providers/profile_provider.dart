@@ -1,7 +1,7 @@
 import 'package:blog_app/features/home/controllers/blog_controllers.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../models/blog_model.dart';
+import '../../../models/blog_model.dart';
 
 class ProfileProvider extends ChangeNotifier {
   List<BlogModel> _usersBlogs = [];

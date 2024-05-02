@@ -1,15 +1,26 @@
+import 'dart:developer';
+
 import 'package:blog_app/constants/colors.dart';
+import 'package:blog_app/constants/error_handler.dart';
 import 'package:blog_app/constants/helper_functions.dart';
 import 'package:blog_app/features/home/ui/pages/blog_page.dart';
-import 'package:blog_app/features/profile/profile_provider.dart';
-import 'package:blog_app/models/user_token_model.dart';
+import 'package:blog_app/features/profile/providers/profile_info_provider.dart';
+import 'package:blog_app/features/profile/providers/profile_provider.dart';
+import 'package:blog_app/models/user_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
-  final UserTokenModel userTokenModel;
-  const ProfilePage({super.key, required this.userTokenModel});
+  final String currentUserId;
+  final UserModel otherUserModel;
+  final UserModel currentUserModel;
+  const ProfilePage({
+    super.key,
+    required this.otherUserModel,
+    required this.currentUserId,
+    required this.currentUserModel,
+  });
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -19,7 +30,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     Provider.of<ProfileProvider>(context, listen: false)
-        .fetchUsersBlogs(widget.userTokenModel.id);
+        .fetchUsersBlogs(widget.otherUserModel.id!);
+    Provider.of<InfoProfileProvider>(context, listen: false).setUserModel(
+      widget.otherUserModel,
+      widget.currentUserModel,
+    );
+    log("UserModel: ${widget.otherUserModel}");
     super.initState();
   }
 
@@ -31,15 +47,17 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: appBgColor,
         surfaceTintColor: appBgColor,
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: GestureDetector(
-              onTap: () {},
-              child: const Icon(
-                CupertinoIcons.pencil_ellipsis_rectangle,
-              ),
-            ),
-          ),
+          widget.currentUserId == widget.otherUserModel.id!
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: const Icon(
+                      CupertinoIcons.pencil_ellipsis_rectangle,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink()
         ],
       ),
       body: Padding(
@@ -48,47 +66,112 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    foregroundImage: NetworkImage(
-                      widget.userTokenModel.profilePic,
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 12,
-                  ),
-                  Column(
+              Consumer<InfoProfileProvider>(
+                builder: (context, provider, child) {
+                  if (provider.errorMessage != null) {
+                    return ErrorHandler(
+                      errorMessage: provider.errorMessage!,
+                    );
+                  }
+                  return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.userTokenModel.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                      CircleAvatar(
+                        radius: 32,
+                        foregroundImage: NetworkImage(
+                          widget.otherUserModel.profilePic,
                         ),
                       ),
                       const SizedBox(
-                        height: 4,
+                        width: 12,
                       ),
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                              "${widget.userTokenModel.followers.length} followers"),
-                          const Text(" • "),
-                          Text(
-                              "${widget.userTokenModel.following.length} following"),
+                            widget.otherUserModel.username,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                "${widget.otherUserModel.followers.length} followers",
+                              ),
+                              const Text(" • "),
+                              Text(
+                                "${widget.otherUserModel.following.length} following",
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          widget.currentUserId != widget.otherUserModel.id!
+                              ? GestureDetector(
+                                  onTap: () => provider.followUnFollowUser(
+                                    currentUserId: widget.currentUserId,
+                                    otherUserId: widget.otherUserModel.id!,
+                                  ),
+                                  child: provider.otherUserModel!.followers
+                                          .contains(widget.otherUserModel.id!)
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                            horizontal: 20,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                              Radius.circular(32),
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.brown.shade300,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            "Followed",
+                                            style:
+                                                TextStyle(color: Colors.black),
+                                          ),
+                                        )
+                                      : Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                            horizontal: 20,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                              Radius.circular(32),
+                                            ),
+                                            color: Colors.brown.shade300,
+                                          ),
+                                          child: const Text(
+                                            "Follow",
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                )
+                              : const SizedBox.shrink(),
                         ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
               const SizedBox(
                 height: 32,
               ),
               Text(
-                "Your Stories",
+                widget.currentUserId == widget.otherUserModel.id!
+                    ? "Your Stories"
+                    : "Stories",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -143,7 +226,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                     PageRouteBuilder(
                                       pageBuilder: (context, animation,
                                               secondaryAnimation) =>
-                                          BlogPage(blogModel: blog),
+                                          BlogPage(
+                                        blogModel: blog,
+                                        currentUserId: widget.currentUserId,
+                                        currentUserModel:
+                                            widget.currentUserModel,
+                                      ),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
                                         var begin = const Offset(1.0, 0.0);
@@ -236,22 +324,27 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 ),
                                               ],
                                             ),
-                                            PopupMenuButton(
-                                              color: appBgColor,
-                                              child: const Icon(
-                                                  Icons.more_vert_rounded),
-                                              itemBuilder: (context) {
-                                                return [
-                                                  PopupMenuItem(
-                                                    height: 30,
-                                                    child: const Text("Delete"),
-                                                    onTap: () =>
-                                                        provider.deleteBlogById(
-                                                            blog.id!),
-                                                  ),
-                                                ];
-                                              },
-                                            ),
+                                            widget.currentUserId ==
+                                                    widget.otherUserModel.id!
+                                                ? PopupMenuButton(
+                                                    color: appBgColor,
+                                                    child: const Icon(Icons
+                                                        .more_vert_rounded),
+                                                    itemBuilder: (context) {
+                                                      return [
+                                                        PopupMenuItem(
+                                                          height: 30,
+                                                          child: const Text(
+                                                              "Delete"),
+                                                          onTap: () => provider
+                                                              .deleteBlogById(
+                                                            blog.id!,
+                                                          ),
+                                                        ),
+                                                      ];
+                                                    },
+                                                  )
+                                                : const SizedBox.shrink(),
                                           ],
                                         ),
                                       ],

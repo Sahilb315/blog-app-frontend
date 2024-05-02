@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:blog_app/features/auth/image_provider.dart';
 import 'package:blog_app/features/home/provider/home_provider.dart';
-import 'package:fluentui_icons/fluentui_icons.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,18 +31,23 @@ class BlogPreviewPage extends StatefulWidget {
 }
 
 class _BlogPreviewPageState extends State<BlogPreviewPage> {
-  late List<String> words;
+  late List<String> allWords;
 
   List<String> extractWords(String content) {
     final List<String> words = [];
     final RegExp linkPattern = RegExp(r'\[([^\]]+)\]');
+    // The matches list containes the links
     final matches = linkPattern.allMatches(content);
-    log(matches.first.groupNames.toString());
     int start = 0;
+
     for (final match in matches) {
+      /// The linktext is pure text which the use enterted
       final linkText = match.group(1);
       if (linkText != null) {
+        /// The text before the link is added
         words.addAll(content.substring(start, match.start).trim().split(' '));
+
+        /// Then the link text is added
         words.add('[$linkText]');
         start = match.end;
       }
@@ -56,7 +60,7 @@ class _BlogPreviewPageState extends State<BlogPreviewPage> {
 
   @override
   void initState() {
-    words = extractWords(widget.blogModel.content);
+    allWords = extractWords(widget.blogModel.content);
     super.initState();
   }
 
@@ -67,13 +71,6 @@ class _BlogPreviewPageState extends State<BlogPreviewPage> {
       appBar: AppBar(
         backgroundColor: appBgColor,
         surfaceTintColor: appBgColor,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            FluentSystemIcons.ic_fluent_dismiss_regular,
-            color: Colors.grey.shade700,
-          ),
-        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
@@ -143,6 +140,7 @@ class _BlogPreviewPageState extends State<BlogPreviewPage> {
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 22,
+                      fontFamily: "Poppins",
                     ),
                   ),
                   const SizedBox(
@@ -152,32 +150,42 @@ class _BlogPreviewPageState extends State<BlogPreviewPage> {
                     text: TextSpan(
                       style: const TextStyle(
                         fontSize: 18,
+                        fontFamily: "Poppins",
                       ),
                       children: [
-                        for (final word in words)
+                        for (final word in allWords)
                           word.startsWith('[') && word.endsWith(']')
                               ? TextSpan(
-                                  text: word.substring(
+                                  text: "${word.substring(
                                     1,
                                     word.length - 1,
-                                  ), // Remove brackets
+                                  )} ",
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
                                       final link =
                                           word.substring(1, word.length - 1);
                                       try {
-                                        await launchUrl(
-                                            Uri.parse("https://$link"));
+                                        if (link.startsWith("https://")) {
+                                          await launchUrl(Uri.parse(link));
+                                        } else {
+                                          await launchUrl(
+                                              Uri.parse("https://$link"));
+                                        }
                                       } catch (e) {
                                         log("Error: $e");
-                                        // Handle error
                                       }
                                     },
-                                  style: const TextStyle(color: Colors.blue),
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 18,
+                                  ),
                                 )
                               : TextSpan(
                                   text: '$word ',
-                                  style: const TextStyle(color: Colors.black),
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 18,
+                                  ),
                                 ),
                       ],
                     ),

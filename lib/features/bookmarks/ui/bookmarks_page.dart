@@ -1,7 +1,9 @@
 import 'package:blog_app/constants/colors.dart';
 import 'package:blog_app/constants/helper_functions.dart';
 import 'package:blog_app/features/bookmarks/bookmark_provider.dart';
+import 'package:blog_app/features/home/provider/home_provider.dart';
 import 'package:blog_app/features/home/ui/pages/blog_page.dart';
+import 'package:blog_app/models/user_model.dart';
 import 'package:blog_app/models/user_token_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +13,12 @@ import '../../../constants/error_handler.dart';
 
 class BookmarksPage extends StatefulWidget {
   final UserTokenModel userTokenModel;
-  const BookmarksPage({super.key, required this.userTokenModel});
+  final UserModel currentUserModel;
+  const BookmarksPage({
+    super.key,
+    required this.userTokenModel,
+    required this.currentUserModel,
+  });
 
   @override
   State<BookmarksPage> createState() => _BoomMarksPageState();
@@ -86,7 +93,12 @@ class _BoomMarksPageState extends State<BookmarksPage> {
                                     PageRouteBuilder(
                                       pageBuilder: (context, animation,
                                               secondaryAnimation) =>
-                                          BlogPage(blogModel: blog),
+                                          BlogPage(
+                                        blogModel: blog,
+                                        currentUserId: widget.userTokenModel.id,
+                                        currentUserModel:
+                                            widget.currentUserModel,
+                                      ),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
                                         var begin = const Offset(1.0, 0.0);
@@ -180,14 +192,18 @@ class _BoomMarksPageState extends State<BookmarksPage> {
                                               ],
                                             ),
                                             InkWell(
-                                              onTap: () {
-                                                provider.bookmarkBlog(
-                                                  userId:
-                                                      widget.userTokenModel.id,
-                                                  blogModel: blog,
-                                                  userTokenModel:
-                                                      widget.userTokenModel,
-                                                );
+                                              onTap: () async {
+                                                await context
+                                                    .read<HomeProvider>()
+                                                    .bookmarkBlog(
+                                                      userId: widget
+                                                          .userTokenModel.id,
+                                                      blogModel: blog,
+                                                      userTokenModel:
+                                                          widget.userTokenModel,
+                                                    );
+                                                provider.usersBookmarks
+                                                    .remove(blog);
                                               },
                                               child: const Icon(
                                                 CupertinoIcons.clear,
