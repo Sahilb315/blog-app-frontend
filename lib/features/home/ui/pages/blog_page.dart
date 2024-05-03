@@ -5,6 +5,7 @@ import 'package:blog_app/constants/helper_functions.dart';
 import 'package:blog_app/features/profile/ui/profile_page.dart';
 import 'package:blog_app/models/blog_model.dart';
 import 'package:blog_app/models/user_model.dart';
+import 'package:blog_app/models/user_token_model.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,11 +14,12 @@ class BlogPage extends StatefulWidget {
   final BlogModel blogModel;
   final String currentUserId;
   final UserModel currentUserModel;
+  final UserTokenModel userTokenModel;
   const BlogPage({
     super.key,
     required this.blogModel,
     required this.currentUserId,
-    required this.currentUserModel,
+    required this.currentUserModel, required this.userTokenModel,
   });
 
   @override
@@ -98,6 +100,7 @@ class _BlogPageState extends State<BlogPage> {
                         otherUserModel: widget.blogModel.createdBy,
                         currentUserId: widget.currentUserId,
                         currentUserModel: widget.currentUserModel,
+                        userTokenModel: widget.userTokenModel,
                       ),
                     ),
                   );
@@ -116,21 +119,8 @@ class _BlogPageState extends State<BlogPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              "${widget.blogModel.createdBy!.username} • ",
-                            ),
-                            InkWell(
-                              onTap: () {},
-                              child: const Text(
-                                "Follow",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          "${widget.blogModel.createdBy!.username}",
                         ),
                         Text(calculateDate(date.toString())),
                       ],

@@ -2,6 +2,7 @@ import 'package:blog_app/constants/helper_functions.dart';
 import 'package:blog_app/features/home/ui/pages/blog_page.dart';
 import 'package:blog_app/models/blog_model.dart';
 import 'package:blog_app/models/user_model.dart';
+import 'package:blog_app/models/user_token_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -12,13 +13,15 @@ class BlogTile extends StatelessWidget {
   final bool isBookmarked;
   final String currentUserId;
   final UserModel currentUserModel;
+  final UserTokenModel userTokenModel;
   const BlogTile({
     super.key,
     required this.blog,
     required this.currentUserId,
     required this.isBookmarked,
     required this.gap,
-    required this.onBookmarkTap, required this.currentUserModel,
+    required this.onBookmarkTap,
+    required this.currentUserModel, required this.userTokenModel,
   });
 
   @override
@@ -33,6 +36,7 @@ class BlogTile extends StatelessWidget {
               blogModel: blog,
               currentUserId: currentUserId,
               currentUserModel: currentUserModel,
+              userTokenModel: userTokenModel,
             ),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {

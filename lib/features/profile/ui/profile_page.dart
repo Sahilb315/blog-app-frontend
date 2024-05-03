@@ -1,25 +1,32 @@
-import 'dart:developer';
+import 'dart:io';
 
 import 'package:blog_app/constants/colors.dart';
 import 'package:blog_app/constants/error_handler.dart';
 import 'package:blog_app/constants/helper_functions.dart';
+import 'package:blog_app/features/auth/image_provider.dart';
+import 'package:blog_app/features/home/provider/home_provider.dart';
 import 'package:blog_app/features/home/ui/pages/blog_page.dart';
 import 'package:blog_app/features/profile/providers/profile_info_provider.dart';
 import 'package:blog_app/features/profile/providers/profile_provider.dart';
 import 'package:blog_app/models/user_model.dart';
+import 'package:blog_app/models/user_token_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
   final String currentUserId;
   final UserModel otherUserModel;
   final UserModel currentUserModel;
+  final UserTokenModel userTokenModel;
   const ProfilePage({
     super.key,
     required this.otherUserModel,
     required this.currentUserId,
     required this.currentUserModel,
+    required this.userTokenModel,
   });
 
   @override
@@ -35,8 +42,22 @@ class _ProfilePageState extends State<ProfilePage> {
       widget.otherUserModel,
       widget.currentUserModel,
     );
-    log("UserModel: ${widget.otherUserModel}");
     super.initState();
+  }
+
+  final ImagePicker _imagePicker = ImagePicker();
+
+  Future<void> getImage(BuildContext context) async {
+    final pickImageProvider = context.read<PickImageProvider>();
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (!context.mounted) return;
+    if (pickedFile != null) {
+      pickImageProvider.setImageFile(File(pickedFile.path));
+      pickImageProvider.setDoesImageExist(true);
+    } else {
+      pickImageProvider.setDoesImageExist(false);
+    }
   }
 
   @override
@@ -46,17 +67,82 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         backgroundColor: appBgColor,
         surfaceTintColor: appBgColor,
+        leading: context.read<InfoProfileProvider>().isEditing
+            ? IconButton(
+                iconSize: 20,
+                icon: const Icon(CupertinoIcons.clear),
+                onPressed: () {
+                  final pickImageProvider = context.read<PickImageProvider>();
+                  pickImageProvider.setImageFile(null);
+                  pickImageProvider.setDoesImageExist(false);
+                  context.read<InfoProfileProvider>().setIsEditing(false);
+                },
+              )
+            : IconButton(
+                icon: const Icon(CupertinoIcons.back),
+                onPressed: () => Navigator.pop(context),
+              ),
         actions: [
+          /// If the current user is the same as the other user, then show the edit icon
           widget.currentUserId == widget.otherUserModel.id!
-              ? Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: const Icon(
-                      CupertinoIcons.pencil_ellipsis_rectangle,
-                    ),
-                  ),
-                )
+
+              /// If isEditing is true then show the checkmark icon otherwise show the edit icon
+              ? context.watch<InfoProfileProvider>().isEditing
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: GestureDetector(
+                        onTap: () async {
+                          final infoProfileProvider =
+                              context.read<InfoProfileProvider>();
+                          final pickImageProvider =
+                              context.read<PickImageProvider>();
+                          final homeProvider = context.read<HomeProvider>();
+
+                          /// Update the new user details & set isEditing to false
+                          final result = await context
+                              .read<InfoProfileProvider>()
+                              .updateProfilePic(
+                                userTokenModel: widget.userTokenModel,
+                                userId: widget.currentUserId,
+                                profilePicPath:
+                                    pickImageProvider.imageFile!.path,
+                              );
+                          if (!context.mounted) return;
+
+                          /// Updating the profile pic in all the blogs by the user in profile page
+                          Provider.of<ProfileProvider>(context, listen: false)
+                              .fetchUsersBlogs(widget.otherUserModel.id!);
+
+                          /// Updating the profile pic in all the blogs by the user in home page
+                          homeProvider.fetchAllBlogs(widget.currentUserId);
+                          infoProfileProvider.setIsProfilePicUpdated(false);
+                          pickImageProvider.setImageFile(null);
+                          pickImageProvider.setDoesImageExist(false);
+                          infoProfileProvider.setIsEditing(false);
+                          if (result != null) {
+                            /// Updating the profile pic of the user in the home page(Drawer)
+                            homeProvider.updateUserProfilePic(result);
+                          }
+                        },
+                        child: const Icon(
+                          CupertinoIcons.checkmark_alt,
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          /// Set isEditing to true
+                          context
+                              .read<InfoProfileProvider>()
+                              .setIsEditing(true);
+                        },
+                        child: const Icon(
+                          Iconsax.edit_outline,
+                        ),
+                      ),
+                    )
               : const SizedBox.shrink()
         ],
       ),
@@ -68,6 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Consumer<InfoProfileProvider>(
                 builder: (context, provider, child) {
+                  final isEditing = provider.isEditing;
                   if (provider.errorMessage != null) {
                     return ErrorHandler(
                       errorMessage: provider.errorMessage!,
@@ -76,11 +163,61 @@ class _ProfilePageState extends State<ProfilePage> {
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        foregroundImage: NetworkImage(
-                          widget.otherUserModel.profilePic,
-                        ),
+                      Consumer<PickImageProvider>(
+                        builder: (context, value, child) {
+                          if (provider.isLoading) {
+                            return const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: CircularProgressIndicator(
+                                color: Colors.brown,
+                                strokeWidth: 3,
+                                strokeCap: StrokeCap.round,
+                              ),
+                            );
+                          } else {
+                            return GestureDetector(
+                              onTap: () {
+                                /// If isEditing is true only then perfoem the action otherwise return
+                                if (!isEditing) return;
+                                getImage(context);
+                              },
+                              child: Stack(
+                                children: [
+                                  isEditing && value.doesImageExist
+                                      ? provider.isProfilePicUpdated
+                                          ? CircleAvatar(
+                                              radius: 32,
+                                              backgroundImage: NetworkImage(
+                                                widget.currentUserModel
+                                                    .profilePic,
+                                              ),
+                                            )
+                                          : CircleAvatar(
+                                              radius: 32,
+                                              backgroundImage: FileImage(
+                                                value.imageFile!,
+                                              ),
+                                            )
+                                      : CircleAvatar(
+                                          radius: 32,
+                                          backgroundImage: NetworkImage(
+                                            widget.otherUserModel.profilePic,
+                                          ),
+                                        ),
+                                  isEditing
+                                      ? Positioned(
+                                          right: 0,
+                                          child: Icon(
+                                            Iconsax.card_edit_outline,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                        )
+                                      : const SizedBox.shrink(),
+                                ],
+                              ),
+                            );
+                          }
+                        },
                       ),
                       const SizedBox(
                         width: 12,
@@ -231,6 +368,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         currentUserId: widget.currentUserId,
                                         currentUserModel:
                                             widget.currentUserModel,
+                                        userTokenModel: widget.userTokenModel,
                                       ),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
@@ -335,11 +473,19 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         PopupMenuItem(
                                                           height: 30,
                                                           child: const Text(
-                                                              "Delete"),
-                                                          onTap: () => provider
-                                                              .deleteBlogById(
-                                                            blog.id!,
+                                                            "Delete",
                                                           ),
+                                                          onTap: () {
+                                                            provider
+                                                                .deleteBlogById(
+                                                              blog.id!,
+                                                            );
+                                                            context
+                                                                .read<
+                                                                    HomeProvider>()
+                                                                .currentUserDeletedBlog(
+                                                                    blog.id!);
+                                                          },
                                                         ),
                                                       ];
                                                     },

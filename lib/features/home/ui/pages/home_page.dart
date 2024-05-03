@@ -40,9 +40,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     initSharedPref();
-    Provider.of<HomeProvider>(context, listen: false).fetchAllBlogs();
     Provider.of<HomeProvider>(context, listen: false)
-        .getUserModel(userTokenModel.id);
+        .fetchAllBlogs(userTokenModel.id);
     scrollController.addListener(() {
       if (scrollController.position.userScrollDirection ==
           ScrollDirection.reverse) {
@@ -55,9 +54,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> onRefresh() async {
-    Provider.of<HomeProvider>(context, listen: false).fetchAllBlogs();
     Provider.of<HomeProvider>(context, listen: false)
-        .getUserModel(userTokenModel.id);
+        .fetchAllBlogs(userTokenModel.id);
   }
 
   final scrollController = ScrollController();
@@ -67,245 +65,259 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: appBgColor,
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: MediaQuery.sizeOf(context).height * 0.1,
-              ),
 
-              /// User's Profile Data
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    foregroundImage: NetworkImage(userTokenModel.profilePic),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Text(
-                    userTokenModel.username,
-                    style: const TextStyle(
-                      fontSize: 16,
+      /// Wait till the user info is fetched because it needs to display the the profile pic & till gives error
+      /// if user is still fetching the user info
+      drawer: context.read<HomeProvider>().isLoading
+          ? const SizedBox.shrink()
+          : Drawer(
+              backgroundColor: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12.0,
+                  horizontal: 16,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.1,
                     ),
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Text(
-                    userTokenModel.email,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-
-              /// Page Tiles
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const SizedBox(
-                    height: 48,
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  ProfilePage(
-                            currentUserModel:
-                                context.watch<HomeProvider>().user!,
-                            otherUserModel: context.watch<HomeProvider>().user!,
-                            currentUserId: userTokenModel.id,
+                    
+                    /// User's Profile Data
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          foregroundImage: NetworkImage(
+                            context.read<HomeProvider>().user!.profilePic,
                           ),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            var begin = const Offset(1.0, 0.0);
-                            var end = Offset.zero;
-                            var curve = Curves.easeInOut;
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        Text(
+                          userTokenModel.username,
+                          style: const TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          userTokenModel.email,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
 
-                            return SlideTransition(
-                              position: animation.drive(tween),
-                              child: child,
+                    /// Page Tiles
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const SizedBox(
+                          height: 48,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        ProfilePage(
+                                  currentUserModel:
+                                      context.watch<HomeProvider>().user!,
+                                  otherUserModel:
+                                      context.watch<HomeProvider>().user!,
+                                  currentUserId: userTokenModel.id,
+                                  userTokenModel: userTokenModel,
+                                ),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  var begin = const Offset(1.0, 0.0);
+                                  var end = Offset.zero;
+                                  var curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                              ),
                             );
                           },
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 12,
-                        bottom: 12,
-                        left: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.brown.shade300,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Iconsax.user_outline, color: Colors.white),
-                          SizedBox(
-                            width: 24,
-                          ),
-                          Text(
-                            "Profile",
-                            style: TextStyle(fontSize: 20, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  BookmarksPage(
-                            userTokenModel: userTokenModel,
-                            currentUserModel:
-                                context.watch<HomeProvider>().user!,
-                          ),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            var begin = const Offset(1.0, 0.0);
-                            var end = Offset.zero;
-                            var curve = Curves.easeInOut;
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-
-                            return SlideTransition(
-                              position: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 12,
-                        bottom: 12,
-                        left: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.brown.shade300,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Iconsax.bookmark_outline,
-                            color: Colors.white,
-                          ),
-                          SizedBox(
-                            width: 24,
-                          ),
-                          Text(
-                            "Bookmarks",
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
+                          child: Container(
+                            padding: const EdgeInsets.only(
+                              top: 12,
+                              bottom: 12,
+                              left: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.brown.shade300,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Iconsax.user_outline, color: Colors.white),
+                                SizedBox(
+                                  width: 24,
+                                ),
+                                Text(
+                                  "Profile",
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        BookmarksPage(
+                                  userTokenModel: userTokenModel,
+                                  currentUserModel:
+                                      context.watch<HomeProvider>().user!,
+                                ),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  var begin = const Offset(1.0, 0.0);
+                                  var end = Offset.zero;
+                                  var curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.only(
+                              top: 12,
+                              bottom: 12,
+                              left: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.brown.shade300,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Iconsax.bookmark_outline,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(
+                                  width: 24,
+                                ),
+                                Text(
+                                  "Bookmarks",
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () async {
+                        customCircularIndicator(context);
+                        final prefs = await SharedPreferences.getInstance();
+                        final result = await prefs.remove("token");
+                        if (!context.mounted) return;
+
+                        if (result == true) {
+                          Navigator.popUntil(
+                            context,
+                            (route) => route == const LoginPage(),
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        } else {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Error while signing out'),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.only(
+                          top: 12,
+                          bottom: 12,
+                          left: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.brown.shade400),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Iconsax.logout_1_outline, color: Colors.black),
+                            SizedBox(
+                              width: 24,
+                            ),
+                            Text(
+                              "Logout",
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.black),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                ],
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () async {
-                  customCircularIndicator(context);
-                  final prefs = await SharedPreferences.getInstance();
-                  final result = await prefs.remove("token");
-                  if (!context.mounted) return;
-
-                  if (result == true) {
-                    Navigator.popUntil(
-                      context,
-                      (route) => route == const LoginPage(),
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
-                    );
-                  } else {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Error while signing out'),
-                      ),
-                    );
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.only(
-                    top: 12,
-                    bottom: 12,
-                    left: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.brown.shade400),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Iconsax.logout_1_outline, color: Colors.black),
-                      SizedBox(
-                        width: 24,
-                      ),
-                      Text(
-                        "Logout",
-                        style: TextStyle(fontSize: 20, color: Colors.black),
-                      ),
-                    ],
-                  ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(
-                height: 8,
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
       appBar: AppBar(
         backgroundColor: appBgColor,
         surfaceTintColor: appBgColor,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () => _scaffoldKey.currentState!.openDrawer(),
           child: const Icon(Icons.menu),
         ),
@@ -377,6 +389,7 @@ class _HomePageState extends State<HomePage> {
                             currentUserModel: provider.user!,
                             currentUserId: userTokenModel.id,
                             blog: blog,
+                            userTokenModel: userTokenModel,
                             gap: gap,
                             isBookmarked: user!.bookmarks.contains(blog.id),
                             onBookmarkTap: () {

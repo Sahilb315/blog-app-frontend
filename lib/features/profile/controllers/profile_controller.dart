@@ -41,6 +41,53 @@ class ProfileController {
       );
     }
   }
+
+  static Future<UserProfileData> updateUserProfilePic({
+    required String userId,
+    required String profilePicPath,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        "PATCH",
+        Uri.parse("${dotenv.env["BASE_URL"]}/user/profilePic"),
+      );
+      request.files.add(
+        await http.MultipartFile.fromPath("profilePic", profilePicPath),
+      );
+      request.fields['userId'] = userId;
+      final streamedResponse = await request.send();
+      final res = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(res.body);
+      if (data['status'] as bool) {
+        return UserProfileData(
+          isUserProfileUpdated: true,
+          profilePicUrl: data['url'],
+        );
+      } else {
+        return UserProfileData(
+          isUserProfileUpdated: false,
+          errorMessage: data['message'],
+        );
+      }
+    } catch (e) {
+      log("Error while updating profile pic: ${e.toString()}");
+      return UserProfileData(
+        isUserProfileUpdated: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}
+
+class UserProfileData {
+  final String? profilePicUrl;
+  final bool isUserProfileUpdated;
+  final String? errorMessage;
+
+  UserProfileData(
+      {this.profilePicUrl,
+      required this.isUserProfileUpdated,
+      this.errorMessage});
 }
 
 class UserData {

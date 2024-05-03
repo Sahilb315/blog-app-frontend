@@ -1,4 +1,3 @@
-
 import 'package:blog_app/features/home/controllers/blog_controllers.dart';
 import 'package:blog_app/models/blog_model.dart';
 import 'package:blog_app/models/user_model.dart';
@@ -20,8 +19,18 @@ class HomeProvider extends ChangeNotifier {
   UserModel? get user => _user;
   bool get isFloatingBtnVisible => _isFloatingBtnVisible;
 
+  void updateUserProfilePic(String profilePic) {
+    _user!.profilePic = profilePic;
+    notifyListeners();
+  }
+
   void setFloatingBtnVisible(bool value) {
     _isFloatingBtnVisible = value;
+    notifyListeners();
+  }
+
+  void currentUserDeletedBlog(String blogId) {
+    _blogs.removeWhere((element) => element.id == blogId);
     notifyListeners();
   }
 
@@ -34,9 +43,10 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchAllBlogs() async {
+  Future<void> fetchAllBlogs(String userId) async {
     _isLoading = true;
     final blogData = await BlogController.getAllBlogs();
+    await getUserModel(userId);
     if (blogData.areBlogsFetched) {
       _blogs = blogData.blogs!;
     } else {

@@ -94,6 +94,7 @@ class _BoomMarksPageState extends State<BookmarksPage> {
                                       pageBuilder: (context, animation,
                                               secondaryAnimation) =>
                                           BlogPage(
+                                            userTokenModel: widget.userTokenModel,
                                         blogModel: blog,
                                         currentUserId: widget.userTokenModel.id,
                                         currentUserModel:

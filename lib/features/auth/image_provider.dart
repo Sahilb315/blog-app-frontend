@@ -17,7 +17,7 @@ class PickImageProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearAll(){
+  void clearAll() {
     _imageFile = null;
     _doesImageExist = false;
   }

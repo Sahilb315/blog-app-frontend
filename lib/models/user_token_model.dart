@@ -1,20 +1,17 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-
 import 'package:blog_app/models/blog_model.dart';
-import 'package:blog_app/models/user_model.dart';
 
 class UserTokenModel {
   final String id;
-  final String profilePic;
+  String profilePic;
   final String username;
   final String email;
-  final List<UserModel> followers;
-  final List<UserModel> following;
+  final List<String> followers;
+  final List<String> following;
   final List<BlogModel> bookmarks;
-
+  
   UserTokenModel({
     required this.id,
     required this.profilePic,
@@ -24,15 +21,14 @@ class UserTokenModel {
     required this.following,
     required this.bookmarks,
   });
-  
 
   UserTokenModel copyWith({
     String? id,
     String? profilePic,
     String? username,
     String? email,
-    List<UserModel>? followers,
-    List<UserModel>? following,
+    List<String>? followers,
+    List<String>? following,
     List<BlogModel>? bookmarks,
   }) {
     return UserTokenModel(
@@ -52,8 +48,8 @@ class UserTokenModel {
       'profilePic': profilePic,
       'username': username,
       'email': email,
-      'followers': followers.map((x) => x.toMap()).toList(),
-      'following': following.map((x) => x.toMap()).toList(),
+      'followers': followers,
+      'following': following,
       'bookmarks': bookmarks.map((x) => x.toMap()).toList(),
     };
   }
@@ -64,9 +60,9 @@ class UserTokenModel {
       profilePic: map['profilePic'] as String,
       username: map['username'] as String,
       email: map['email'] as String,
-      followers: List<UserModel>.from((map['followers'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>),),),
-      following: List<UserModel>.from((map['following'] as List).map<UserModel>((x) => UserModel.fromMap(x as Map<String,dynamic>),),),
-      bookmarks: List<BlogModel>.from((map['bookmarks'] as List).map<BlogModel>((x) => BlogModel.fromMap(x as Map<String,dynamic>),),),
+      followers: List.from((map['followers'] as List)),
+      following: List.from((map['following'] as List)),
+      bookmarks: List<BlogModel>.from((map['bookmarks'] as List).map<BlogModel>((x) => BlogModel.fromMap(x))),
     );
   }
 
@@ -76,7 +72,7 @@ class UserTokenModel {
 
   @override
   String toString() {
-    return 'UserTokenModel(id: $id, profilePic: $profilePic, username: $username, email: $email, followers: $followers, following: $following, bookmarks: $bookmarks)';
+    return 'UserTokenModel(_id: $id, profilePic: $profilePic, username: $username, email: $email, followers: $followers, following: $following, bookmarks: $bookmarks)';
   }
 
   @override

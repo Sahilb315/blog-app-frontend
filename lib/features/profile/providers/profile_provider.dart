@@ -1,6 +1,5 @@
 import 'package:blog_app/features/home/controllers/blog_controllers.dart';
 import 'package:flutter/cupertino.dart';
-
 import '../../../models/blog_model.dart';
 
 class ProfileProvider extends ChangeNotifier {
@@ -25,7 +24,7 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteBlogById(String blogId) async {
+  Future<bool> deleteBlogById(String blogId) async {
     _isLoading = true;
     notifyListeners();
     final result = await BlogController.deleteBlogById(blogId);
@@ -33,10 +32,14 @@ class ProfileProvider extends ChangeNotifier {
     /// If blog is deleted successfully
     if (result.isBlogAdded) {
       _usersBlogs.remove(result.blog!);
+      _isLoading = false;
+      notifyListeners();
+      return true;
     } else {
       _errorMessage = result.errorMessage;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
-    _isLoading = false;
-    notifyListeners();
   }
 }
