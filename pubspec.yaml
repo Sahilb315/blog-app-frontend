@@ -50,6 +50,7 @@ dependencies:
   icons_plus: ^5.0.0
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.0
+  connectivity_plus: ^6.0.3
 
 dev_dependencies:
   flutter_test:
@@ -61,7 +62,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
-  flutter_launcher_icons: ^0.13.1
 
 flutter_launcher_icons:
   android: true
