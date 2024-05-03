@@ -48,6 +48,8 @@ dependencies:
   shimmer: ^3.0.0
   shared_preferences: ^2.2.3
   icons_plus: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -59,9 +61,28 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/blog_logo.png"
+
+
+flutter_native_splash:
+ 
+  color: "#925626"
+  image: assets/images/splash.png
+
+  color_dark: "#925626"
+  android_12:
+    image: assets/images/splash.png
+    color: "#925626"
+
+  #android: false
+  #ios: false
+  web: false
 
 # The following section is specific to Flutter packages.
 flutter:
