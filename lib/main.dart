@@ -66,6 +66,7 @@ class _MyAppState extends State<MyApp> {
       log('Couldn\'t check connectivity status', error: e);
       return;
     }
+    
     if (!mounted) {
       return Future.value(null);
     }
